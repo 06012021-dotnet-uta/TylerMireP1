@@ -352,3 +352,6 @@ MigrationBackup/
 # vscode configs folder
 .vscode
 .vs
+
+.bin
+.obj
