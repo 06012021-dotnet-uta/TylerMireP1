@@ -1,0 +1,17 @@
+﻿@inject SignInManager<Customer> signInManager
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4 p-5">Welcome</h1>
+    @if (signInManager.IsSignedIn(User))
+    {
+        <p>Please select a location to start shopping</p>
+    }
+    else
+    {
+        <p>Please login to start shopping</p>
+    }
+</div>
