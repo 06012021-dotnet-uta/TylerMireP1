@@ -1,0 +1,83 @@
+@model List<CartItem>
+
+@{
+    ViewData["Title"] = "Cart";
+    List<LocationProductInfo> inventory = (List<LocationProductInfo>)ViewBag.Inventory;
+    Dictionary<KeyValuePair<Guid, Guid>, LocationProductInfo> locationInventories =
+        new Dictionary<KeyValuePair<Guid, Guid>, LocationProductInfo>();
+    Dictionary<Guid, Product> productDetailsDict = (Dictionary<Guid, Product>)ViewBag.ProductDetailsDict;
+    Dictionary<Guid, Location> locationDetailsDict = (Dictionary<Guid, Location>)ViewBag.LocationDetailsDict;
+
+    foreach (var l in inventory)
+    {
+        locationInventories.Add(new KeyValuePair<Guid, Guid>(l.ProductId, l.LocationId), l);
+    }
+
+}
+
+@{
+    Model.OrderBy(x => x.LocationId);
+    List<List<CartItem>> itemsByLocation = new List<List<CartItem>>();
+    foreach(var key in locationDetailsDict.Keys)
+    {
+        itemsByLocation.Add(Model.Where(x => x.LocationId == key).ToList());
+    }
+}
+<div>
+    <h4>Cart</h4>
+    <hr />
+    @if (Model.Count > 0)
+    {
+        @using (Html.BeginForm("UpdateCart", "Orders", FormMethod.Post, Model))
+        {
+            foreach (var locationSection in itemsByLocation)
+            {
+                if (locationSection.Count > 0)
+                {
+                    <h3>@locationDetailsDict[locationSection[0].LocationId].Name</h3>
+                    <br />
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    @Html.DisplayNameFor(model => Model[0].Product.Name)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => Model[0].TotalItems)
+                                </th>
+                                <th>
+                                    Updated Count
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @for (int i = 0; i < locationSection.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => productDetailsDict[Model[i].ProductId].Name)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => locationSection[i].TotalItems)
+                                    </td>
+                                    <td>
+                                        <input type="hidden" asp-for="@Model[i].LocationId" value="@locationSection[i].LocationId" />
+                                        <input type="hidden" asp-for="@Model[i].ProductId" value="@locationSection[i].ProductId" />
+                                        <input asp-for="@Model[i].TotalItems" type="number" value="@locationSection[i].TotalItems" min="0" max="@locationInventories[KeyValuePair.Create<Guid, Guid>(Model[i].ProductId, Model[i].LocationId)].TotalItems" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+            <input type="submit" value="Update" class="float-right btn-primary" />
+            <input type="button" value="Checkout" class="float-right btn-primary" onclick="location.href='@Url.Action("Checkout", "Orders")'" />
+        }
+    }
+    else
+    {
+        <p>Cart is empty</p>
+    }
+</div>

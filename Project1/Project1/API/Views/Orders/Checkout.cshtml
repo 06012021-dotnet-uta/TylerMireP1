@@ -1,0 +1,85 @@
+@model List<CartItem>
+
+@{
+    ViewData["Title"] = "Checkout";
+    List<LocationProductInfo> inventory = (List<LocationProductInfo>)ViewBag.Inventory;
+    Dictionary<KeyValuePair<Guid, Guid>, LocationProductInfo> locationInventories =
+        new Dictionary<KeyValuePair<Guid, Guid>, LocationProductInfo>();
+    Dictionary<Guid, Product> productDetailsDict = (Dictionary<Guid, Product>)ViewBag.ProductDetailsDict;
+    Dictionary<Guid, Location> locationDetailsDict = (Dictionary<Guid, Location>)ViewBag.LocationDetailsDict;
+
+    foreach (var l in inventory)
+    {
+        locationInventories.Add(new KeyValuePair<Guid, Guid>(l.ProductId, l.LocationId), l);
+    }
+
+    float total = 0;
+    Guid cartid = new Guid();
+}
+
+@{
+    Model.OrderBy(x => x.LocationId);
+    List<List<CartItem>> itemsByLocation = new List<List<CartItem>>();
+    foreach(var key in locationDetailsDict.Keys)
+    {
+        itemsByLocation.Add(Model.Where(x => x.LocationId == key).ToList());
+    }
+    cartid = Model[0].CartId;
+}
+<div>
+    <h4>Checkout</h4>
+    <hr />
+    @using (Html.BeginForm("Checkout", "Orders", FormMethod.Post, Model))
+    {
+        foreach (var locationSection in itemsByLocation)
+        {
+            if (locationSection.Count > 0)
+            {
+            <h3>@locationDetailsDict[locationSection[0].LocationId].Name</h3>
+            <br />
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => Model[0].Product.Name)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => Model[0].TotalItems)
+                        </th>
+                        <th>
+                            Price
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @for (int i = 0; i < locationSection.Count; i++)
+                    {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => productDetailsDict[Model[i].ProductId].Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => locationSection[i].TotalItems)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => productDetailsDict[locationSection[i].ProductId].Price)
+                        </td>
+                        <td>
+                            <input type="hidden" asp-for="@Model[i].LocationId" value="@locationSection[i].LocationId" />
+                            <input type="hidden" asp-for="@Model[i].ProductId" value="@locationSection[i].ProductId" />
+                            <input type="hidden" asp-for="@Model[i].CartId" value="@cartid" />
+                            <input type="hidden" asp-for="@Model[i].TotalItems" value="@Model[i].TotalItems" />
+                            @{total += (float)(Model[i].TotalItems * productDetailsDict[locationSection[i].ProductId].Price);}
+                        </td>
+                    </tr>
+                                }
+                </tbody>
+            </table>
+                                    }
+                                }
+        <h5 class="float-right">Total: $@total.ToString("0.00")</h5>
+        <br />
+        <input type="submit" value="Checkout" class="float-right btn-primary" />
+   }
+</div>

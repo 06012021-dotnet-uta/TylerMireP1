@@ -1,0 +1,118 @@
+@model Domain.OrderFormModel
+
+@{
+    Location location = (Location)ViewBag.Location;
+    List<LocationProductInfo> inventory = (List<LocationProductInfo>)ViewBag.Inventory;
+    Dictionary<Guid, Product> productInfoDict = (Dictionary<Guid, Product>)ViewBag.ProductInfoDict;
+    ViewData["Title"] = location.Name;
+}
+
+<div>
+    <h4>@Html.DisplayFor(x => location.Name)</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(x => location.AddressStreet)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(x => location.AddressStreet)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(x => location.AddressCity)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(x => location.AddressCity)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(x => location.AddressState)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(x => location.AddressState)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(x => location.PhoneNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(x => location.PhoneNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(x => location.ZipCode)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(x => location.ZipCode)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<br />
+
+<div>
+    <h4>Products</h4>
+    @if (inventory.Count > 0)
+    {
+        @using (Html.BeginForm("AddToCart", "Orders", FormMethod.Post))
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            Product
+                        </th>
+                        <th>
+                            Description
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => inventory[0].SaleDiscount)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => inventory[0].ItemsPerOrder)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => inventory[0].TotalItems)
+                        </th>
+                        <th>
+                            Count
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < inventory.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => productInfoDict[inventory[i].ProductId].Name)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => productInfoDict[inventory[i].ProductId].Description)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => inventory[i].SaleDiscount)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => inventory[i].ItemsPerOrder)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => inventory[i].TotalItems)
+                            </td>
+                            <td>
+                                <input asp-for="ItemsAdded[i]" type="number" value="0" min="0" max="@inventory[i].TotalItems" />
+                                <input type="hidden" asp-for="ProductId[i]" value="@inventory[i].ProductId" />
+                                <input type="hidden" asp-for="LocationId" value="@location.Id" />
+                                <input type="hidden" asp-for="Location" value="@location" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <input class="float-right btn btn-primary" type="submit" id="btnPost" />
+        }
+    }
+    else
+    {
+        <a>No products at location</a>
+    }
+</div>
+
