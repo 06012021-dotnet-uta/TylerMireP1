@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Domain;
@@ -9,14 +10,17 @@ using Persistence;
 
 namespace Application.Customers
 {
-    public class List
+    public class Details
     {
         /// <summary>
-        /// Retreives a list of all customers
+        /// Returns a Customer with an Id matched in specified Guid
         /// </summary>
-        public class Query : IRequest<List<Customer>> { }
+        public class Query : IRequest<Customer> 
+        { 
+            public Guid? CustomerId { get; set; }
+        }
 
-        public class Handler : IRequestHandler<Query, List<Customer>>
+        public class Handler : IRequestHandler<Query, Customer>
         {
             private readonly DataContext _context;
             private readonly ILogger<List> _logger;
@@ -27,9 +31,11 @@ namespace Application.Customers
                 _logger = logger;
             }
 
-            public async Task<List<Customer>> Handle(Query request, CancellationToken ct)
+            public async Task<Customer> Handle(Query request, CancellationToken ct)
             {
-                return await _context.Customers.ToListAsync(ct);
+
+                return await _context.Customers.FirstOrDefaultAsync(m => m.Id.ToUpper() == request.CustomerId.ToString().ToUpper());
+
             }
         }
     }

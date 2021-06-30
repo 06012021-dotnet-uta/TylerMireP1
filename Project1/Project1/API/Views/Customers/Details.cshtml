@@ -2,10 +2,30 @@
 
 @{
     ViewData["Title"] = "Details";
+    Dictionary<Guid, Location> locationInfoDict = (Dictionary<Guid, Location>)ViewBag.LocationInfoDict;
+    List<SelectListItem> selectListItems = new List<SelectListItem>();
+    List<OrderItem> orderItems = (List<OrderItem>)ViewBag.OrderItems;
+
+    foreach(var key in locationInfoDict.Keys)
+    {
+        selectListItems.Add(new SelectListItem()
+        {
+            Text = locationInfoDict[key].Name,
+            Value = key.ToString()
+        });
+    }
 }
 
 <div>
     <h4>Customer</h4>
+    <hr />
+    @using (Html.BeginForm("UpdateDefaultLocation", "Customers", FormMethod.Post, Model))
+    {
+        <input type="hidden" asp-for="@Model.Id" value="@Model.Id"/>
+        @Html.DropDownListFor(model => model.DefaultLocationId, selectListItems, new { @class = "form-control" })
+        <input type="submit" class="btn-primary float-right" value="Update" />
+        <br />
+    }
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -13,12 +33,6 @@
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.UserName)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.PasswordHash)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.PasswordHash)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.FirstName)
@@ -57,12 +71,6 @@
             @Html.DisplayFor(model => model.AddressState)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.DefaultLocationId)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.DefaultLocationId)
-        </dd>
-        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.AccountCreationDate)
         </dt>
         <dd class="col-sm-10">
@@ -71,6 +79,42 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div>
+<div>
+    <h4>Order History</h4>
+    @if (orderItems.Count > 0)
+    {
+<table>
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => orderItems[0].OrderId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => orderItems[0].ProductId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => orderItems[0].TotalItems)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in orderItems)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => orderItems[0].OrderId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => orderItems[0].ProductId)
+            </td>
+            <td>
+                @Html.DisplayFor(model => orderItems[0].TotalItems)
+            </td>
+        </tr>
+        }
+    </tbody>
+    </table>
+    }
 </div>

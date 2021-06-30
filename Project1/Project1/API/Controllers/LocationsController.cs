@@ -3,44 +3,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Domain;
-using Persistence;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Application.Locations;
 
 namespace API.Controllers
 {
-    public class LocationsController : Controller
+    public class LocationsController : BaseController
     {
-        private readonly DataContext _context;
-
-        public LocationsController(DataContext context)
+        public LocationsController(IMediator mediator, ILogger<LocationsController> logger)
+            : base(mediator, logger)
         {
-            _context = context;
         }
 
         // GET: Locations
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Locations.ToListAsync());
+            return View(await _mediator.Send(new List.Query()));
         }
 
         // GET: Locations/Details/5
         public async Task<IActionResult> Details(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            var locationDetails = await _mediator.Send(new Inventory.Query() { locationId = id});
+            var location = await _mediator.Send(new Details.Query() { locationId = id });
+            var productInfoDict = await _mediator.Send(new Application.Products.DetailsDict.Request());
 
-            var location = await _context.Locations
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (location == null)
-            {
-                return NotFound();
-            }
+            ViewBag.Location = location;
+            ViewBag.Inventory = locationDetails;
+            ViewBag.ProductInfoDict = productInfoDict;
 
-            return View(location);
+            return View();
         }
 
         // GET: Locations/Create
@@ -49,22 +44,23 @@ namespace API.Controllers
             return View();
         }
 
+        
+
         // POST: Locations/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,AddressStreet,AddressCity,AddressState,PhoneNumber,ZipCode")] Location location)
+        public async Task<IActionResult> Create([Bind("Id,Name,AddressStreet,AddressCity,AddressState,PhoneNumber,ZipCode")] Location newLocation)
         {
+            Location l;
             if (ModelState.IsValid)
             {
-                location.Id = Guid.NewGuid();
-                _context.Add(location);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                l = await _mediator.Send(new Add.Request() { location = newLocation});
             }
-            return View(location);
+            return View();
         }
+        /*
 
         // GET: Locations/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
@@ -150,5 +146,6 @@ namespace API.Controllers
         {
             return _context.Locations.Any(e => e.Id == id);
         }
+        */
     }
 }

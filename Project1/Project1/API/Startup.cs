@@ -8,10 +8,6 @@ using System.Reflection;
 using Persistence;
 using MediatR;
 using Domain;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-
 
 namespace Project1
 {
@@ -40,9 +36,6 @@ namespace Project1
             //Identity Service Setup
             services.AddDefaultIdentity<Customer>()
                 .AddEntityFrameworkStores<DataContext>();
-
-            //Because identitycore is dumb and needs this
-            services.TryAddSingleton<ISystemClock, SystemClock>();
 
             services.AddMediatR(Assembly.GetAssembly(typeof(Application.Customers.List)));
         }

@@ -1,23 +1,74 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
+using Microsoft.Extensions.Logging;
 using Domain;
-using Persistence;
+using Application.Orders;
+using System.Collections.Generic;
 
 namespace API.Controllers
 {
-    public class OrdersController : Controller
+    public class OrdersController : BaseController
     {
-        private readonly DataContext _context;
 
-        public OrdersController(DataContext context)
+        public OrdersController(IMediator mediator, ILogger<OrdersController> logger)
+            : base(mediator, logger)
         {
-            _context = context;
         }
+
+        public async Task<IActionResult> AddToCart(OrderFormModel formOrders)
+        {
+            await _mediator.Send(new AddToCart.Request()
+            {
+                orders = formOrders,
+                user = HttpContext.User.Identity
+            });
+            return RedirectToAction("Index", "Locations");
+        }
+
+        public async Task<IActionResult> Cart()
+        {
+            var cartDetails = await _mediator.Send(new CartDetails.Request() { user = HttpContext.User.Identity });
+            ViewBag.Inventory = await _mediator.Send(new Application.Locations.Inventory.Query());
+            ViewBag.ProductDetailsDict = await _mediator.Send(new Application.Products.DetailsDict.Request());
+            ViewBag.LocationDetailsDict = await _mediator.Send(new Application.Locations.DetailsDict.Request());
+
+            return View(cartDetails);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCart(List<CartItem> cartDetails)
+        {
+            await _mediator.Send(new UpdateCart.Request()
+            {
+                updatedCartItems = cartDetails,
+                user = HttpContext.User.Identity
+            });
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        public async Task<IActionResult> Checkout()
+        {
+            var cartDetails = await _mediator.Send(new CartDetails.Request() { user = HttpContext.User.Identity });
+            ViewBag.Inventory = await _mediator.Send(new Application.Locations.Inventory.Query());
+            ViewBag.ProductDetailsDict = await _mediator.Send(new Application.Products.DetailsDict.Request());
+            ViewBag.LocationDetailsDict = await _mediator.Send(new Application.Locations.DetailsDict.Request());
+
+            return View(cartDetails);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Checkout(List<CartItem> cartDetails)
+        {
+            await _mediator.Send(new Checkout.Request() { cartItems = cartDetails, user = HttpContext.User.Identity });
+
+            return RedirectToAction("Index", "Home");
+        }
+
+
+        /*
 
         // GET: Orders
         public async Task<IActionResult> Index()
@@ -150,5 +201,6 @@ namespace API.Controllers
         {
             return _context.Orders.Any(e => e.Id == id);
         }
+        */
     }
 }

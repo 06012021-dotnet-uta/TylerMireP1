@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Application.Customers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace API.Controllers
 {
@@ -19,18 +20,19 @@ namespace API.Controllers
             _signInManager = signInManager;
         }
 
-        [Authorize]
         // GET: Customers
         public async Task<IActionResult> Index()
         {
             return View(await _mediator.Send(new List.Query()));
         }
 
+        [AllowAnonymous]
         public IActionResult Register()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterCustomerModel newCustomer)
@@ -53,25 +55,35 @@ namespace API.Controllers
             return View(newCustomer);
         }
 
+        [AllowAnonymous]
         public IActionResult Login()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginCustomerModel loginCustomer)
         {
-            if (ModelState.IsValid)
+            if(!ModelState.IsValid)
             {
-                await _mediator.Send(new Login.Query() 
-                {
-                    UserName = loginCustomer.UserName,
-                    Password = loginCustomer.Password
-                });
-                return RedirectToAction("Index", "Home");
+                return View(loginCustomer);
             }
-            return View(loginCustomer);
+            
+            var c = await _mediator.Send(new Login.Query() 
+            {
+                UserName = loginCustomer.UserName,
+                Password = loginCustomer.Password
+            });
+
+            if(c == null)
+            {
+                ModelState.AddModelError(string.Empty, "The username or password is incorrect.");
+                return View(loginCustomer);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
@@ -81,7 +93,7 @@ namespace API.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        /*
+        
         // GET: Customers/Details/5
         public async Task<IActionResult> Details(Guid? id)
         {
@@ -90,8 +102,10 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var customer = await _mediator.Send(new Details.Query() { CustomerId = id });
+            ViewBag.LocationInfoDict = await _mediator.Send(new Application.Locations.DetailsDict.Request());
+            ViewBag.OrderItems = await _mediator.Send(new Application.Orders.OrderList.Request() { user = HttpContext.User.Identity });
+
             if (customer == null)
             {
                 return NotFound();
@@ -100,6 +114,14 @@ namespace API.Controllers
             return View(customer);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateDefaultLocation(Customer customer)
+        {
+            await _mediator.Send(new SetDefaultLocation.Query() { CustomerId = new Guid(customer.Id), DefaultLocationId = customer.DefaultLocationId });
+            return RedirectToAction("Details", new { id = customer.Id});
+        }
+
+        /*
         // GET: Customers/Create
         public IActionResult Create()
         {

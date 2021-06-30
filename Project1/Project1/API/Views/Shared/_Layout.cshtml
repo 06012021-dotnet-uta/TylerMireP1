@@ -33,7 +33,7 @@
                 </div>
                 @if(signInManager.IsSignedIn(User))
                 {
-                    <a class="nav-link text-dark align-content-end">@User.Identity.Name</a>
+                    <a  asp-controller="Orders" asp-action="Cart" class="nav-link text-dark align-content-end">@User.Identity.Name</a>
                     <a class="nav-link text-dark align-content-end" asp-area="" asp-controller="Customers" asp-action="Logout">Logout</a>
                 }
                 else

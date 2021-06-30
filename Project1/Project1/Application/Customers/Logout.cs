@@ -12,6 +12,9 @@ namespace Application.Customers
 {
     public class Logout
     {
+        /// <summary>
+        /// Logs the specified user out
+        /// </summary>
         public class Request : IRequest
         {
             public Customer user { get; set; }

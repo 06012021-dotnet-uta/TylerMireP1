@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Errors;
 using Domain;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +13,9 @@ namespace Application.Customers
 {
     public class Register
     {
+        /// <summary>
+        /// Registers a new customer using the specified user information
+        /// </summary>
         public class Command : IRequest<Customer>
         {
             
@@ -44,7 +47,7 @@ namespace Application.Customers
             {
                 if(await _context.Customers.AnyAsync(x => x.UserName == request.UserName))
                 {
-                    throw new RestException(HttpStatusCode.BadRequest, new { UserName = "Username already exists." });
+                    return null;
                 }
 
                 Customer customer = new Customer
@@ -63,7 +66,13 @@ namespace Application.Customers
                 
                 if(result.Succeeded)
                 {
+                    await _context.Carts.AddAsync(new Cart()
+                    {
+                        CustomerId = new Guid(customer.Id),
+                        Customer = customer
+                    });
                     await _signInManager.SignInAsync(customer, false);
+                    await _context.SaveChangesAsync();
                     return await _userManager.FindByNameAsync(customer.UserName);
                 }
 

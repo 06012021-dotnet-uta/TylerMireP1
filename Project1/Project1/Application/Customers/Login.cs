@@ -1,11 +1,6 @@
-﻿using Application.Errors;
-using Domain;
+﻿using Domain;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using System.Net;
-using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +8,9 @@ namespace Application.Customers
 {
     public class Login
     {
+        /// <summary>
+        /// Makes a loggin attempt and returns a customer if login was successful
+        /// </summary>
         public class Query : IRequest<Customer>
         {
             public string UserName { get; set; }
@@ -34,7 +32,7 @@ namespace Application.Customers
             {
                 var user = await _userManager.FindByNameAsync(request.UserName);
 
-                if (user == null) throw new RestException(HttpStatusCode.Unauthorized);
+                if (user == null) return null;
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
 
@@ -44,7 +42,7 @@ namespace Application.Customers
                     return user;
                 }
 
-                throw new RestException(HttpStatusCode.Unauthorized);
+                return null;
             }
         }
     }

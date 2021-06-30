@@ -1,14 +1,20 @@
 ﻿@inject SignInManager<Customer> signInManager
+@inject UserManager<Customer> userManager
 
 @{
     ViewData["Title"] = "Home";
+    Customer user = null;
+    if (signInManager.IsSignedIn(User))
+        user = await userManager.FindByNameAsync(User.Identity.Name);
 }
 
 <div class="text-center">
     <h1 class="display-4 p-5">Welcome</h1>
     @if (signInManager.IsSignedIn(User))
     {
+
         <p>Please select a location to start shopping</p>
+        <a asp-action="Details" asp-controller="Locations" asp-route-id="@user.DefaultLocationId">Default Store</a>
     }
     else
     {
